@@ -1,12 +1,12 @@
 import numpy as np 
 import pandas as pd
 
-train  = pd.read_csv("../input/labeledTrainData.tsv",sep='\t',header=0,quoting=3)
+train  = pd.read_csv("../input/labeledTrainData.tsv",sep='\t',header=0,quoting=3) #initialize training data (IMDB review dataset)
 
-from bs4 import BeautifulSoup
-from nltk.corpus import stopwords
-import re
-def dataClean(string):
+from bs4 import BeautifulSoup  #remove html tags
+from nltk.corpus import stopwords  #words having high frequency like "the"
+import re 
+def dataClean(string):    # clean data by removing html tags,numbers and stopwords.
     soup = BeautifulSoup(string,"lxml")
     html_gone = soup.get_text()
     numbers_gone = re.sub("[^a-zA-Z]"," ",html_gone)
@@ -18,17 +18,17 @@ def dataClean(string):
 
 num_reviews = train.review.size
 clean_data=[]
-for i in range(0,num_reviews):
+for i in range(0,num_reviews):        # for each review in dataset, apply dataclean method.
     clean_data.append(dataClean(train.review.iloc[i]))
     
     
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_extraction.text import CountVectorizer #countVectorizer initialises an array of frequencies of words.
+from sklearn.ensemble import RandomForestClassifier #supervised-learning
 vectorizer = CountVectorizer(analyzer="word",tokenizer=None,preprocessor=None,stop_words=None,max_features=5000)
 clean_reviews = vectorizer.fit_transform(clean_data)
 clean_reviews = clean_reviews.toarray()
 
-forest = RandomForestClassifier(n_estimators=100)
+forest = RandomForestClassifier(n_estimators=100)    
 forest.fit(clean_reviews,train['sentiment'])
 
 
@@ -40,6 +40,8 @@ for i in range(0,test_num):
     
 clean = vectorizer.transform(clean_test)
 clean = clean.toarray()
-predictions = forest.predict(clean)
+predictions = forest.predict(clean) #predict on the trained random-forest
 output = pd.DataFrame({'id':test_data['id'],'sentiment':predictions})
 output.to_csv('answer.csv',index=False,quoting=3)
+
+#Predictions are 84.6% accurate for binary sentiment.
